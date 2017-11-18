@@ -436,7 +436,7 @@ class Client(object):
         return BatchedResultsIterator(entity=model.Athlete, bind_client=self,
                                       result_fetcher=result_fetcher, limit=limit)
 
-    def get_club_activities(self, club_id, limit=None):
+    def get_club_activities(self, club_id, limit=None, before=None):
         """
         Gets the activities associated with specified club.
 
@@ -445,15 +445,25 @@ class Client(object):
         :param club_id: The numeric ID for the club.
         :type club_id: int
 
+        :param before: Result will start with activities whose start date is
+                       before specified date. (UTC)
+        :type before: datetime.datetime or str or None
+
         :param limit: Maximum number of activities to return. (default unlimited)
         :type limit: int
 
         :return: An iterator of :class:`stravalib.model.Activity` objects.
         :rtype: :class:`BatchedResultsIterator`
         """
+
+        if before:
+            before = self._utc_datetime_to_epoch(before)
+
+        params = dict(club_id, before=before)
+
         result_fetcher = functools.partial(self.protocol.get,
                                            '/clubs/{id}/activities',
-                                           id=club_id)
+                                           **params)
 
         return BatchedResultsIterator(entity=model.Activity, bind_client=self,
                                       result_fetcher=result_fetcher, limit=limit)
